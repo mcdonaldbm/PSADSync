@@ -1,4 +1,3 @@
-#TYPE System.Management.Automation.PSCustomObject
 "csvEmployeeIdField","csvsamAccountNameIdField","csvAccountExpiresSyncField","csvManagerIdSyncField","csvFirstNameSyncField","csvLastNameSyncField","csvNickNameSyncField","csvManagerSyncField"
 "1","psadsyncuser1","1/1/20","6","firstnamechangeme1","lastnamechangeme1","nicknamechangeme1","managerchangeme1"
 ,"psadsyncuser2",,"7","firstnamechangeme2","lastnamechangeme2","nicknamechangeme2","managerchangeme2"
