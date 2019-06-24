@@ -1288,7 +1288,11 @@ function Invoke-AdSync {
 
 		[Parameter()]
 		[ValidateNotNullOrEmpty()]
-		[hashtable]$Exclude
+		[hashtable]$Exclude,
+
+		[Parameter()]
+		[ValidateNotNullOrEmpty()]
+		[string]$logFilePath
 	)
 	begin {
 		$ErrorActionPreference = 'Stop'
@@ -1407,7 +1411,11 @@ function Invoke-AdSync {
 											ADAttributeValue  = [string]($_.ActiveDirectoryAttribute.Values)
 											Message           = $null
 										}
-										WriteLog -CsvIdentifierField $csvIdField -CsvIdentifierValue $csvIdValue -Attributes $logAttribs	
+										if ($logFilePath) {
+											WriteLog -CsvIdentifierField $csvIdField -CsvIdentifierValue $csvIdValue -Attributes $logAttribs -FilePath $logFilePath
+										} else {
+											WriteLog -CsvIdentifierField $csvIdField -CsvIdentifierValue $csvIdValue -Attributes $logAttribs -FilePath $logFilePath	
+										}
 									}
 									
 									if (-not $ReportOnly.IsPresent) {
@@ -1497,7 +1505,11 @@ function Invoke-AdSync {
 						}
 					} finally {
 						if ($logEntry) {
-							WriteLog -CsvIdentifierField $csvIdField -CsvIdentifierValue $csvIdValue -Attributes $logAttribs
+							if ($logFilePath) {
+								WriteLog -CsvIdentifierField $csvIdField -CsvIdentifierValue $csvIdValue -Attributes $logAttribs -FilePath $logFilePath
+							} else {
+								WriteLog -CsvIdentifierField $csvIdField -CsvIdentifierValue $csvIdValue -Attributes $logAttribs
+							}
 						}
 						$rowsProcessed++
 					}
