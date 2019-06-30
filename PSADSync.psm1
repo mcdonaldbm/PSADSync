@@ -14,10 +14,6 @@ foreach ($import in @($Public + $Private)) {
 		Write-Verbose "Importing $($import.FullName)"
 		. $import.FullName
 	} catch {
-		Write-Error "Failed to import function $($import.FullName): $_"
+		$PSCmdlet.ThrowTerminatingError($_)
 	}
-}
-
-foreach ($file in $Public) {
-	Export-ModuleMember -Function $file.BaseName
 }
