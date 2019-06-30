@@ -202,7 +202,7 @@ InModuleScope $ThisModuleName {
 		
 			$result = & $commandName @PSBoundParameters
 
-			(Compare-Object $script:csvUsersNullConvert.'AD_LOGON' $result.'AD_LOGON').InputObject | should benullorempty
+			Compare-Object $script:csvUsersNullConvert.'AD_LOGON' $result.'AD_LOGON' | should benullorempty
 		}
 
 		it 'when excluding 1 col, should return all expected users: <TestName>' -TestCases $testCases.Exclude1Col {
@@ -210,7 +210,7 @@ InModuleScope $ThisModuleName {
 		
 			$result = & $commandName @PSBoundParameters
 
-			(Compare-Object @('foo2', 'notinAD', 'null') $result.'AD_LOGON').InputObject | should benullorempty
+			Compare-Object @('foo2', 'notinAD', 'null') $result.'AD_LOGON' | should benullorempty
 		}
 	
 		it 'when excluding 2 cols, should return all expected users: <TestName>' -TestCases $testCases.Exclude2Cols {
@@ -218,7 +218,7 @@ InModuleScope $ThisModuleName {
 		
 			$result = & $commandName @PSBoundParameters
 
-			(Compare-Object @('notinAD', 'null') $result.'AD_LOGON').InputObject | should benullorempty
+			Compare-Object @('notinAD', 'null') $result.'AD_LOGON' | should benullorempty
 		}
 	}
 
@@ -1256,7 +1256,7 @@ InModuleScope $ThisModuleName {
 				Parameters = @{
 					AdUser = $script:AdUserNoMisMatch
 					CsvUser = $script:csvUserNoMisMatch
-					FieldSyncMap = @{ { $null } = 'OtherAttrib' }
+					FieldSyncMap = @{ { $null } = 'otherattribmap' }
 				}
 			}
 		)
@@ -1345,7 +1345,9 @@ InModuleScope $ThisModuleName {
 				context 'when the attribute does not exist' {
 
 					mock 'Get-AvailableAdUserAttribute' {
-						@('notinhere')
+						[pscustomobject]@{
+							'ValidName' = 'NOTattribName'
+						}
 					}
 	
 					$result = & $commandName @parameters
@@ -1950,7 +1952,7 @@ InModuleScope $ThisModuleName {
 
 					$assMParams = @{
 						CommandName = 'SetAdUser'
-						Times = @($funcParams.Attributes).Count
+						Times = @($funcParams.ActiveDirectoryAttributes).Count
 						Exactly = $true
 						ParameterFilter = {
 							foreach ($i in $expectedParams.Parameters) {
@@ -1986,11 +1988,25 @@ InModuleScope $ThisModuleName {
 					CSVAttributeValue = 123
 				}
 				TestName = 'Standard'
+			},
+			@{
+				FilePath = 'C:\log.csv'
+				CSVIdentifierValue = 'username'
+				CSVIdentifierField = 'employeeid'
+				Attributes = @{ 
+					ADAttributeName = 'EmployeeId'
+					ADAttributeValue = $null
+					CSVAttributeName = 'PERSON_NUM'
+					CSVAttributeValue = 123
+				}
+				Overwrite = $true
+				TestName = 'Overwrite'
 			}
 		)
 	
 		$testCases = @{
 			All = $parameterSets
+			Overwrite = $parameterSets.where({ $_.ContainsKey('Overwrite') })
 		}
 	
 		it 'should export a CSV to the expected path: <TestName>' -TestCases $testCases.All {
@@ -2019,6 +2035,21 @@ InModuleScope $ThisModuleName {
 				Exactly = $true
 				Scope = 'It'
 				ParameterFilter = { $Append }
+			}
+			Assert-MockCalled @assMParams
+		}
+
+		it 'should overwrite the CSV if the switch is applied: <TestName>' -TestCases $testCases.Overwrite {
+			param($FilePath, $CSVIdentifierValue, $CSVIdentifierField, $Attributes, $Overwrite)
+
+ 			& $commandName @PSBoundParameters
+
+ 			$assMParams = @{
+				CommandName = 'Export-Csv'
+				Times = 1
+				Exactly = $true
+				Scope = 'It'
+				ParameterFilter = {!($Append)}
 			}
 			Assert-MockCalled @assMParams
 		}
@@ -2946,6 +2977,12 @@ InModuleScope $ThisModuleName {
 								CsvField = 'Status'
 								CsvValue = 0, 2
 							}
+						}
+					}
+					UserTermination = @{
+						FieldValueSettings = @{
+							CsvField = 'Status'
+							CsvValue = 0, 2
 						}
 					}
 				}
